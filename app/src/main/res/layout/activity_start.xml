@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <ScrollView
+        android:background="@drawable/gradient"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:layout_width="360dp"
+                android:layout_height="222dp"
+                android:layout_marginTop="30dp"
+                android:layout_marginBottom="20dp"
+                android:src="@drawable/img" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="120dp"
+                android:layout_gravity="center"
+                android:text="Welcome to 'HiChat' "
+                android:textColor="@color/white"
+                android:fontFamily="serif"
+                android:textStyle="bold"
+                android:textSize="35sp"
+                android:layout_marginBottom="15dp"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="The place where you \n    will find friends \n       to chat with"
+                android:textStyle="italic"
+                android:textSize="30dp"
+                android:textColor="@color/white"
+                android:layout_marginBottom="28dp"/>
+
+            <Button
+                android:id="@+id/start_btn"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:layout_marginLeft="18dp"
+                android:layout_marginRight="18dp"
+                android:layout_marginTop="50dp"
+                android:backgroundTint="#117680"
+                android:fontFamily="sans-serif"
+                android:text="Get Started"
+                android:textColor="@color/white"
+                android:textSize="25dp"
+                android:textStyle="bold"
+                />
+        </LinearLayout>
+    </ScrollView>
+</layout>
