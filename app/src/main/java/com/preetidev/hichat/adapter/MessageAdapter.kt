@@ -1,67 +1,46 @@
 package com.preetidev.hichat.adapter
 
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.preetidev.hichat.R
 import com.preetidev.hichat.Utils
 import com.preetidev.hichat.modal.Messages
 
-class MessageAdapter : RecyclerView.Adapter<MessageHolder>() {
+class MessageAdapter(val context: Context,val messageList:ArrayList<Messages>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    private var listOfMessage = listOf<Messages>()
 
-    private val LEFT = 0
-    private val RIGHT = 1
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MessageHolder {
-        val inflater = LayoutInflater.from(parent.context)
-        return if (viewType == RIGHT) {
-            val view = inflater.inflate(R.layout.chatitemright, parent, false)
-            MessageHolder(view)
-        } else {
-            val view = inflater.inflate(R.layout.chatitemleft, parent, false)
-            MessageHolder(view)
+
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+
+        if(holder.javaClass==SentViewHolder::class.java){
+            val viewHolder=holder as SentViewHolder
+        }else{
+            val viewHolder=holder as ReceiveViewHolder
         }
-    }
-
-    override fun getItemCount() = listOfMessage.size
-
-    override fun onBindViewHolder(holder: MessageHolder, position: Int) {
-        val message = listOfMessage[position]
-
-        holder.messageText.visibility = View.VISIBLE
-        holder.timeOfSent.visibility = View.VISIBLE
-
-        holder.messageText.text = message.message
-        holder.timeOfSent.text = message.time?.substring(0, 5) ?: ""
-
-
-
-
-
-
-
-
-
-
 
     }
 
-    override fun getItemViewType(position: Int) =
-        if (listOfMessage[position].sender == Utils.getUidLoggedIn()) RIGHT else LEFT
+    class SentViewHolder(itemView:View):RecyclerView.ViewHolder(itemView){
+         val sentMessage=itemView.findViewById<TextView>(R.id.sent)
+    }
 
-    fun setList(newList: List<Messages>) {
+    class ReceiveViewHolder(itemView:View):RecyclerView.ViewHolder(itemView){
+        val sentMessage=itemView.findViewById<TextView>(R.id.received)
+    }
 
-        this.listOfMessage = newList
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        TODO("Not yet implemented")
+    }
 
+    override fun getItemCount(): Int {
+        TODO("Not yet implemented")
     }
 
 }
 
-class MessageHolder(itemView: View) : RecyclerView.ViewHolder(itemView.rootView) {
-    val messageText: TextView = itemView.findViewById(R.id.show_message)
-    val timeOfSent: TextView = itemView.findViewById(R.id.timeView)
-}

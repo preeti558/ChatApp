@@ -1,9 +1,17 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Base.Theme.HiChat" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Base.Theme.HiChat" parent="Theme.MaterialComponents.Light.NoActionBar">
         <!-- Customize your light theme here. -->
+        <item name="colorPrimary">#117680</item>
+        <item name="colorPrimaryDark">#0B4C52</item>
+        <item name="colorAccent">#2439AD</item>
+
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+
+
     </style>
+
+
 
     <style name="Theme.HiChat" parent="Base.Theme.HiChat" />
 </resources>

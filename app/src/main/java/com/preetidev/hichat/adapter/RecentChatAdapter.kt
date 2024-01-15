@@ -1,5 +1,7 @@
 package com.preetidev.hichat.adapter
 
+import android.annotation.SuppressLint
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,19 +11,19 @@ import com.preetidev.hichat.R
 import com.preetidev.hichat.modal.RecentChats
 import de.hdodenhof.circleimageview.CircleImageView
 import com.bumptech.glide.Glide
+import com.preetidev.hichat.modal.Users
 
-class RecentChatAdapter :RecyclerView.Adapter<MyChatListHolder>() {
+class RecentChatAdapter(private val context: Context,  listOfChats: MutableList<RecentChats>) : RecyclerView.Adapter<RecentHolder>() {
 
-    var listOfChats = listOf<RecentChats>()
-    private var listener: onChatClicked? = null
-    var chatShitModal = RecentChats()
+    private var listOfChats = listOf<RecentChats>()
+    private var listener: OnItemClickListener? = null
 
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyChatListHolder {
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecentHolder {
 
         val view = LayoutInflater.from(parent.context).inflate(R.layout.recentchatlist, parent, false)
-        return MyChatListHolder(view)
-
+        return RecentHolder(view)
 
     }
 
@@ -30,64 +32,63 @@ class RecentChatAdapter :RecyclerView.Adapter<MyChatListHolder>() {
         return listOfChats.size
 
 
-    }
-
-
-    fun setList(list: List<RecentChats>) {
-        this.listOfChats = list
-
 
     }
 
-    override fun onBindViewHolder(holder: MyChatListHolder, position: Int) {
+    override fun onBindViewHolder(holder: RecentHolder, position: Int) {
 
-        val chatlist = listOfChats[position]
+        val chat = listOfChats[position]
 
-
-        chatShitModal = chatlist
-
-
-        holder.userName.setText(chatlist.name)
+        val name = chat.username
+        holder.profileName.setText(name)
 
 
-        val themessage = chatlist.message!!.split(" ").take(4).joinToString(" ")
-        val makelastmessage = "${chatlist.person}: ${themessage} "
-
-        holder.lastMessage.setText(makelastmessage)
-
-        Glide.with(holder.itemView.context).load(chatlist.friendsimage).into(holder.imageView)
-
-        holder.timeView.setText(chatlist.time!!.substring(0, 5))
+        Glide.with(holder.itemView.context).load(chat.imageUrl).into(holder.imageProfile)
 
         holder.itemView.setOnClickListener {
-            listener?.getOnChatCLickedItem(position, chatlist)
-
-
+            listener?.onChatSelected(position, chat)
         }
-
 
     }
 
+    @SuppressLint("NotifyDataSetChanged")
+    fun setList(list: List<RecentChats>){
+        this.listOfChats = list
+        notifyDataSetChanged()
+    }
 
-    fun setOnChatClickListener(listener: onChatClicked) {
+    fun setOnClickListener(){
         this.listener = listener
     }
 
+ interface OnItemClickListener{
+     fun onChatSelected(position: Int,chats: RecentChats)
+ }
+    fun setOnItemClickListener(listener: OnItemClickListener){
+        this.listener=listener
+    }
 
 
 }
 
-class MyChatListHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+class RecentHolder(itemView: View) : RecyclerView.ViewHolder(itemView){
 
-    val imageView: CircleImageView = itemView.findViewById(R.id.recentChatImageView)
-    val userName: TextView = itemView.findViewById(R.id.recentChatTextName)
-    val lastMessage: TextView = itemView.findViewById(R.id.recentChatTextLastMessage)
-    val timeView: TextView = itemView.findViewById(R.id.recentChatTextTime)
+    val profileName: TextView = itemView.findViewById(R.id.recentChatTextName)
+    val imageProfile : CircleImageView = itemView.findViewById(R.id.recentChatImageView)
+
+    private var listOfChats = listOf<RecentChats>()
+    private var listener: RecentChatAdapter.OnItemClickListener? = null
+
+    init {
+        itemView.setOnClickListener {
+            listener?.onChatSelected(adapterPosition, listOfChats[adapterPosition])
+        }
+    }
+
 
 
 }
 
 
-interface onChatClicked {
-    fun getOnChatCLickedItem(position: Int, chatList: RecentChats)
-}
+
+

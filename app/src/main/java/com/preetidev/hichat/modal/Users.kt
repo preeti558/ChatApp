@@ -3,21 +3,30 @@ package com.preetidev.hichat.modal
 import android.os.Parcel
 import android.os.Parcelable
 
+
 data class Users(
-    val userid:String?="",
-    val status:String?="",
-    val imageUrl:String?="",
-    val username:String?="",
-    val useremail:String?=""
+
+    val userid: String? = "",
+    val status : String? = "",
+    val imageUrl : String? = "",
+    val username: String? = "",
+    val useremail : String? ="",
 
 
-):Parcelable{
+
+
+
+
+    ): Parcelable{
+
+
     constructor(parcel: Parcel) : this(
         parcel.readString(),
         parcel.readString(),
         parcel.readString(),
         parcel.readString(),
-        parcel.readString()) {
+        parcel.readString()
+    ) {
     }
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
@@ -41,5 +50,6 @@ data class Users(
             return arrayOfNulls(size)
         }
     }
+
 
 }

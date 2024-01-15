@@ -14,7 +14,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:id="@+id/toolbarMain"
-            android:background="#191970">
+            android:background="#0B4C52">
 
 
             <TextView
@@ -26,7 +26,6 @@
                 android:textColor="#FFFFFF"
                 android:textSize="20sp"/>
 
-
             <de.hdodenhof.circleimageview.CircleImageView
                 android:layout_width="45dp"
                 android:layout_height="45dp"
@@ -35,6 +34,7 @@
                 app:civ_border_width="1dp"
                 app:civ_border_color="#FE2C54"
                 android:id="@+id/tlImage"/>
+
 
             <ImageView
                 android:layout_width="35dp"
@@ -72,11 +72,11 @@
 
 
         <androidx.cardview.widget.CardView
-            android:backgroundTint="#7A8CF3"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:cardElevation="8dp"
             android:layout_margin="10dp"
+            android:backgroundTint="#117680"
             app:cardCornerRadius="20dp">
 
 
@@ -84,7 +84,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_margin="10dp"
-
                 android:id="@+id/rvRecentChats"/>
 
 

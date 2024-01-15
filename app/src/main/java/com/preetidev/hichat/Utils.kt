@@ -13,7 +13,7 @@ class Utils {
         val context = MyApplication.instance.applicationContext
 
         @SuppressLint("StaticFieldLeak")
-        val firestore = FirebaseFirestore.getInstance()
+        var firestore = FirebaseFirestore.getInstance()
 
         private val auth = FirebaseAuth.getInstance()
         private var userid: String = ""

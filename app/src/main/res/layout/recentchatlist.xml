@@ -27,6 +27,7 @@
         <TextView
             android:id="@+id/recentChatTextName"
             android:layout_width="wrap_content"
+            android:textStyle="bold"
             android:layout_height="wrap_content"
             android:text="User name"
             android:textSize="18sp"
@@ -54,7 +55,7 @@
             android:id="@+id/recentChatTextLastMessage"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Last Message"
+            android:text="Hello ! I'm Using HiChat"
             android:textSize="16sp"
             android:textColor="#000000"
             android:fontFamily="sans-serif"

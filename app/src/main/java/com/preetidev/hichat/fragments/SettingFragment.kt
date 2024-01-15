@@ -1,7 +1,7 @@
-@file:Suppress("DEPRECATION")
 package com.preetidev.hichat.fragments
 
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
@@ -12,33 +12,31 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import androidx.navigation.findNavController
 import com.bumptech.glide.Glide
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
 import com.preetidev.hichat.R
 import com.preetidev.hichat.Utils
 import com.preetidev.hichat.databinding.FragmentSettingBinding
-import com.preetidev.hichat.mvvm.ChatAppViewModel
-import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.StorageReference
 import java.io.ByteArrayOutputStream
 import java.util.*
 
 
 class SettingFragment : Fragment() {
 
-    lateinit var viewModel: ChatAppViewModel
-    lateinit var binding : FragmentSettingBinding
+    lateinit var binding: FragmentSettingBinding
 
     private lateinit var storageRef: StorageReference
     lateinit var storage: FirebaseStorage
     var uri: Uri? = null
-
     lateinit var bitmap: Bitmap
+    var imageUrl:String=""
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -52,44 +50,20 @@ class SettingFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-
-        viewModel = ViewModelProvider(this).get(ChatAppViewModel::class.java)
-
-        binding.lifecycleOwner = viewLifecycleOwner
-        binding.viewModel = viewModel
-
-
-
         storage = FirebaseStorage.getInstance()
         storageRef = storage.reference
+        binding.lifecycleOwner = viewLifecycleOwner
 
+        // Other setup code...
 
-
-        viewModel.imageUrl.observe(viewLifecycleOwner, Observer {
-
-
-            loadImage(it)
-
-
-
-
-        })
-
+        // Set click listener for settingBack_btn
         binding.settingBackBtn.setOnClickListener {
-
-            view.findNavController().navigate(R.id.action_settingFragment_to_homeFragment)
-
-
+            // Navigate to HomeFragment
+            navigateToHomeFragment()
         }
-
         binding.settingUpdateButton.setOnClickListener {
-
-            viewModel.updateProfile()
-
-
+            updateProfile()
         }
-
-
         binding.settingUpdateImage.setOnClickListener {
 
             val options = arrayOf<CharSequence>("Take Photo", "Choose from Gallery", "Cancel")
@@ -103,37 +77,25 @@ class SettingFragment : Fragment() {
 
 
                     }
+
                     options[item] == "Choose from Gallery" -> {
                         pickImageFromGallery()
                     }
+
                     options[item] == "Cancel" -> dialog.dismiss()
                 }
             }
             builder.show()
-
-
-
-
-
-
+        }
+        // Load the image only if there is a valid URL
+        // This assumes you have a valid imageUrl variable
+        // and it is set after uploading the image
+        if (imageUrl.isNotBlank()) {
+            loadImage(imageUrl)
         }
 
-
-
     }
 
-
-
-    private fun loadImage(imageUrl: String) {
-
-
-
-
-        Glide.with(requireContext()).load(imageUrl).placeholder(R.drawable.person).dontAnimate()
-            .into(binding.settingUpdateImage)
-
-
-    }
 
     @SuppressLint("QueryPermissionsNeeded")
     private fun pickImageFromGallery() {
@@ -145,7 +107,6 @@ class SettingFragment : Fragment() {
         }
     }
 
-    // To take a photo with the camera, you can use this code
     @SuppressLint("QueryPermissionsNeeded")
     private fun takePhotoWithCamera() {
 
@@ -155,6 +116,46 @@ class SettingFragment : Fragment() {
 
     }
 
+    private fun updateProfile() {
+        val context = requireContext()
+
+        val hashMapUser =
+            hashMapOf<String, Any>(
+                "username" to binding.settingUpdateName.text.toString(),
+                "imageUrl" to "YourImageURL"
+            )
+
+        FirebaseFirestore.getInstance().collection("Users")
+            .document(Utils.getUidLoggedIn())
+            .update(hashMapUser)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Toast.makeText(context, "Updated", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, "Failed to update profile", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+    }
+
+
+    private fun navigateToHomeFragment() {
+        val homeFragment = HomeFragment()
+
+        // Replace the current fragment with HomeFragment
+        requireActivity().supportFragmentManager.beginTransaction()
+            .replace(R.id.flFragment, homeFragment)
+            .addToBackStack(null) // Add to back stack if you want to enable the back button to navigate back
+            .commit()
+    }
+
+    private fun loadImage(imageUrl: String) {
+
+        Glide.with(requireContext()).load(imageUrl).placeholder(R.drawable.person).dontAnimate()
+            .into(binding.settingUpdateImage)
+
+
+    }
 
     @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -168,6 +169,7 @@ class SettingFragment : Fragment() {
 
                     uploadImageToFirebaseStorage(imageBitmap)
                 }
+
                 Utils.REQUEST_IMAGE_PICK -> {
                     val imageUri = data?.data
                     val imageBitmap =
@@ -201,15 +203,8 @@ class SettingFragment : Fragment() {
             task?.addOnSuccessListener {
 
                 uri = it
-                viewModel.imageUrl.value = uri.toString()
-
 
             }
-
-
-
-
-
 
             Toast.makeText(context, "Image uploaded successfully!", Toast.LENGTH_SHORT).show()
         }.addOnFailureListener {
@@ -219,23 +214,4 @@ class SettingFragment : Fragment() {
 
 
 
-    override fun onResume() {
-        super.onResume()
-
-
-        viewModel.imageUrl.observe(viewLifecycleOwner, Observer {
-
-
-            loadImage(it)
-
-
-
-
-        })
-
-
-
-
-
-    }
 }

@@ -1,11 +1,15 @@
 package com.preetidev.hichat.modal
 
-data class Messages (
-    val sender : String? = "",
-    val receiver: String? = "",
-    val message: String? = "",
-    val time: String? = "",
-    ) {
+class Messages {
+    var message:String?=null
+    var senderId:String?=null
 
-        val id : String get() = "$sender-$receiver-$message-$time"
+    constructor(){}
+
+    constructor(message:String?,senderId:String?){
+        this.message=message
+        this.senderId=senderId
+    }
+
+
 }

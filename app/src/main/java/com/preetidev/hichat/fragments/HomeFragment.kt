@@ -1,215 +1,173 @@
-@file:Suppress("DEPRECATION")
 
 package com.preetidev.hichat.fragments
 
-import android.app.ActivityManager
 import android.app.ProgressDialog
-import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
-import android.widget.AdapterView.OnItemClickListener
-import android.widget.ImageView
-import android.widget.Toast
-import androidx.activity.OnBackPressedCallback
-import androidx.appcompat.widget.Toolbar
 import androidx.databinding.DataBindingUtil
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
-import androidx.navigation.findNavController
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.iid.FirebaseInstanceIdReceiver
-import com.google.firebase.installations.FirebaseInstallations
-import com.google.firebase.ktx.Firebase
-import com.google.firebase.messaging.FirebaseMessaging
+import com.google.rpc.context.AttributeContext.Auth
 import com.preetidev.hichat.R
 import com.preetidev.hichat.activities.SignInActivity
-import com.preetidev.hichat.adapter.OnUserSelectedListener
 import com.preetidev.hichat.adapter.RecentChatAdapter
 import com.preetidev.hichat.adapter.UserAdapter
-import com.preetidev.hichat.adapter.onChatClicked
 import com.preetidev.hichat.databinding.FragmentHomeBinding
 import com.preetidev.hichat.modal.RecentChats
 import com.preetidev.hichat.modal.Users
-import com.preetidev.hichat.mvvm.ChatAppViewModel
-import de.hdodenhof.circleimageview.CircleImageView
-
-class HomeFragment : Fragment(), OnUserSelectedListener, onChatClicked {
 
 
-    lateinit var rvUsers : RecyclerView
-    lateinit var rvRecentChats : RecyclerView
-    lateinit var adapter : UserAdapter
-    lateinit var viewModel : ChatAppViewModel
-    lateinit var toolbar: Toolbar
-    lateinit var circleImageView: CircleImageView
-    lateinit var recentadapter : RecentChatAdapter
-    lateinit var firestore : FirebaseFirestore
+class HomeFragment : Fragment() {
+
     lateinit var binding: FragmentHomeBinding
-
-
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var rv: RecyclerView
+    private lateinit var userAdapter: UserAdapter
+    private lateinit var recentChatAdapter: RecentChatAdapter
+    private lateinit var db: FirebaseFirestore
+    private lateinit var progressDialog: ProgressDialog
+    private var loggedInUserId: String = ""
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_home, container, false)
         return binding.root
     }
 
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-
-        viewModel = ViewModelProvider(this).get(ChatAppViewModel::class.java)
-        toolbar = view.findViewById(R.id.toolbarMain)
-        val logoutimage = toolbar.findViewById<ImageView>(R.id.logOut)
-        circleImageView = toolbar.findViewById(R.id.tlImage)
-
-
-
+        val firebaseAuth = FirebaseAuth.getInstance()
         binding.lifecycleOwner = viewLifecycleOwner
 
-
-
-        viewModel.imageUrl.observe(viewLifecycleOwner, Observer {
-
-
-            Glide.with(requireContext()).load(it).into(circleImageView)
-
-
-
-
-
-        })
-
-
-
-
-//
-//        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner,
-//            object : OnBackPressedCallback(true) {
-//                override fun handleOnBackPressed() {
-//                    getActivity()?.moveTaskToBack(true);
-//                    getActivity()?.finish();
-//
-//                }
-//
-//            })
-
-        firestore = FirebaseFirestore.getInstance()
-
-
-        val firebaseAuth = FirebaseAuth.getInstance()
-
-
-
-        logoutimage.setOnClickListener {
-
-
+        //Toolbar
+        binding.logOut.setOnClickListener {
             firebaseAuth.signOut()
-
             startActivity(Intent(requireContext(), SignInActivity::class.java))
-
-
         }
 
+        binding.tlImage.setOnClickListener {
+            startActivity(Intent(requireContext(), SettingFragment::class.java))
+        }
+        // Initialize ProgressDialog
+        progressDialog = ProgressDialog(requireContext())
+        progressDialog.setCancelable(false)
+        progressDialog.setMessage("Loading Products")
+        progressDialog.show()
 
-        rvUsers = view.findViewById(R.id.rvUsers)
-        rvRecentChats = view.findViewById(R.id.rvRecentChats)
-        adapter = UserAdapter()
-        recentadapter = RecentChatAdapter()
+        // Initialize RecyclerView and related components
+        recyclerView = binding.rvUsers
+        rv = binding.rvRecentChats
+
+        recyclerView.setHasFixedSize(true)
+        rv.setHasFixedSize(true)
+
+        recyclerView.layoutManager =
+            LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+        rv.layoutManager = LinearLayoutManager(requireContext())
+
+        userAdapter = UserAdapter(requireContext(), mutableListOf())
+        recentChatAdapter = RecentChatAdapter(requireContext(), mutableListOf())
+
+        recyclerView.adapter = userAdapter
+        rv.adapter = recentChatAdapter
 
 
-        val layoutManager = LinearLayoutManager(activity, LinearLayoutManager.HORIZONTAL, false)
-        val layoutManager2 = LinearLayoutManager(activity)
+        // Initialize Firebase components
+        db = FirebaseFirestore.getInstance()
+        // Set up Firestore event listener
+        eventChangeListener()
 
-        rvUsers.layoutManager = layoutManager
-        rvRecentChats.layoutManager= layoutManager2
-
-
-        viewModel.getUsers().observe(viewLifecycleOwner, Observer {
-
-            adapter.setList(it)
-            rvUsers.adapter = adapter
-
-
+        //set the item click listener for RecentChatAdapter
+        recentChatAdapter.setOnItemClickListener(object : RecentChatAdapter.OnItemClickListener {
+            override fun onChatSelected(position: Int, chat: RecentChats) {
+                // Handle item click, navigate to ChatFragment
+                val chatFragment = ChatFragment()
+                val transaction = requireActivity().supportFragmentManager.beginTransaction()
+                transaction.replace(R.id.flFragment, chatFragment)
+                transaction.addToBackStack(null)
+                transaction.commit()
+            }
         })
 
 
-        circleImageView.setOnClickListener {
+    }
+
+    // Function to set up Firestore event listener
+    private fun eventChangeListener() {
+        db.collection("Users")
+            .addSnapshotListener { value, error ->
+                if (error != null) {
+                    // Handle error
+                    if (progressDialog.isShowing) progressDialog.dismiss()
+                    Log.e("No Internet Connection", error.message.toString())
+                    return@addSnapshotListener
+                }
+
+                // Process document changes
+                val usersList = mutableListOf<Users>()// Create a list to store Users objects
+
+                for (dc in value?.documentChanges ?: emptyList()) {
+                    if (dc.type == DocumentChange.Type.ADDED) {
+                        // Add new product to the list
+                        val user = dc.document.toObject(Users::class.java)
+                        if (user.userid != loggedInUserId) {
+                            // Exclude the logged-in user
+                            usersList.add(user)
+                        }
+
+                    }
+                }
+                // Notify adapter about changes and dismiss ProgressDialog
+                userAdapter.setList(usersList)
+                progressDialog.dismiss()
 
 
-            view.findNavController().navigate(R.id.action_homeFragment_to_settingFragment)
+            }
+//        Similar logic for RecentChats collection to update recentChatAdapter
 
+        db.collection("Users")
+            .addSnapshotListener { value, error ->
+                if (error != null) {
+                    // Handle error
+                    return@addSnapshotListener
+                }
 
-        }
+                val recentChatsList = mutableListOf<RecentChats>()
+                for (dc in value?.documentChanges ?: emptyList()) {
+                    if (dc.type == DocumentChange.Type.ADDED) {
+                        val recentChat = dc.document.toObject(RecentChats::class.java)
+                        if (recentChat.userid != loggedInUserId) {
+                            // Exclude the logged-in user
+                            recentChatsList.add(recentChat)
+                        }
+                    }
 
+                    recentChatAdapter.setList(recentChatsList)
+                }
 
-        adapter.setOnClickListener(this)
-
-
-
-
-
-        viewModel.getRecentUsers().observe(viewLifecycleOwner, Observer {
-
-
-            recentadapter.setList(it)
-            rvRecentChats.adapter = recentadapter
-
-
-
-
-
-        })
-
-        recentadapter.setOnChatClickListener(this)
-
-
-
-
+            }
 
 
     }
-
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-    }
-
-
-    override fun onUserSelected(position: Int, users: Users) {
-
-        val action = HomeFragmentDirections.actionHomeFragmentToChatFragment(users)
-        view?.findNavController()?.navigate(action)
-
-
-
-
-    }
-
-
-    override fun getOnChatCLickedItem(position: Int, chatList: RecentChats) {
-
-
-        val action = HomeFragmentDirections.actionHomeFragmentToChatfromHome(chatList)
-        view?.findNavController()?.navigate(action)
-
-
-
-    }
-
-
 }
+
+
+
+
+
+
+
+
+
+
